@@ -32,8 +32,6 @@ Jim := Object clone do(
   )
   
   parseLine := method(line,
-    line println
-    // ping PONG
     case(line,
       (beginsWithSeq("PING"),
         ("PONGED: " .. line) println
@@ -45,10 +43,28 @@ Jim := Object clone do(
         setSlot("text", line afterSeq(":") afterSeq(":"))
         case(text,
           (beginsWithSeq(Jim nick .. ":"), sendToChannel(sentChannel, text afterSeq(":")))
+          (beginsWithSeq("!>"),
+            what := text afterSeq("!> ")
+            if(Jim ?sx,
+              string := Jim sx doSandboxString("(" .. what .. ") asString") asString
+              sendToChannel(sentChannel, string),
+              Jim sx := Jim createSandbox
+              sendToChannel(sentChannel, "Creating new sandbox")
+              string := Jim sx doSandboxString("(" .. what .. ") asString") asString
+              sendToChannel(sentChannel, string)
+            )
+          )
+          (beginsWithSeq("!newSandbox"), sendToChannel(sentChannel, "Creating new sandbox"); Jim sx := Jim createSandbox)
         )
       )
     )
     return false
+  )
+  
+  createSandbox := method(
+    x := Sandbox clone
+    x doSandboxString("Range; Regex; Random; Rational; Lobby Regex := Protos Addons Regex Regex; Lobby Random := Protos Addons Random Random; Lobby Rational := Protos Addons Rational Rational; Protos Core DynLib removeSlot(\"call\"); Importer turnOff; \"system exit\" split foreach(name, System removeSlot(name)); Collector allObjects := \"Use of Collector allObjects is disabled at the moment.\";  \"File Directory Importer AddonLoader\" split foreach(name, Protos Core removeSlot(name))")
+    return x
   )
   
   sendToChannel := method(channel, line,
