@@ -1,1 +1,5 @@
 This is an irc bot written in iO. Trying to learn.
+
+The bot responds to its nick to just repeat things back
+! to eval a script
+!newSandbox to initiate a new sandbox
