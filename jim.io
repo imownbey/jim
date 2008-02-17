@@ -43,15 +43,14 @@ Jim := Object clone do(
         setSlot("text", line afterSeq(":") afterSeq(":"))
         case(text,
           (beginsWithSeq(Jim nick .. ":"), sendToChannel(sentChannel, text afterSeq(":")))
-          (beginsWithSeq("!>"),
-            what := text afterSeq("!> ")
-            if(Jim ?sx,
-              string := Jim sx doSandboxString("(" .. what .. ") asString") asString
-              sendToChannel(sentChannel, string),
-              Jim sx := Jim createSandbox
-              sendToChannel(sentChannel, "Creating new sandbox")
-              string := Jim sx doSandboxString("(" .. what .. ") asString") asString
-              sendToChannel(sentChannel, string)
+          (beginsWithSeq("! "),
+            what := text afterSeq("! ")
+            if(Jim ?sx, nil, Jim sx := Jim createSandbox; sendToChannel(sentChannel, "Creating new sandbox"))
+            Jim sx doSandboxString("e := try(" .. what .. ")") asString
+            if(Jim sx doSandboxString("if(e ?error) asString") == "true",
+              sendToChannel(sentChannel, "Errored out. Reason: " .. Jim sx doSandboxString("(e ?error) asString") asString)
+              if(Jim sx doSandboxString("if(e ?showStack, e showStack, false) asString") != "false", sendToChannel(sentChannel, Jim sx doSandboxString("e showStack asString") asString)),
+              sendToChannel(sentChannel, sx doSandboxString("(" .. what .. ") asString") asString)
             )
           )
           (beginsWithSeq("!newSandbox"), sendToChannel(sentChannel, "Creating new sandbox"); Jim sx := Jim createSandbox)
@@ -95,4 +94,4 @@ Object case := method(obj,
   )
 )
 
-Jim connect("Jimmmmmmm", "irc.freenode.net", "#fauna")
+Jim connect("Jimmmmmmm", "irc.freenode.net", "fauna")
